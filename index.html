@@ -46,12 +46,23 @@
         .box { background: #162447; padding: 30px; border-radius: 15px; border: 3px solid #00e676; text-align: center; max-width: 500px; width: 100%; box-shadow: 0 0 20px #00e67655; }
         .box button { background: #00e676; padding: 10px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; margin: 5px; color: black; }
         
-        /* ฉากต่อสู้ */
-        .fighter { width: 45%; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; border: 2px solid #444; }
-        .hp-bar { background: #111; height: 12px; border-radius: 5px; overflow: hidden; margin: 5px 0; }
-        .hp-fill { height: 100%; background: #00e676; transition: width 0.3s; }
-        .btn-action { padding: 8px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex: 1; margin: 0 2px; }
+        /* ฉากต่อสู้เวอร์ชันใหม่ */
+        .battle-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: none; justify-content: center; align-items: center; z-index: 999; }
+        .battle-box { background: linear-gradient(135deg, #2c1a4d 0%, #162447 100%); border: 4px solid #ffeb3b; border-radius: 20px; padding: 30px; max-width: 800px; width: 100%; text-align: center; box-shadow: 0 0 30px rgba(255, 235, 59, 0.3); }
+        .battle-versus { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
+        .fighter { width: 240px; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 2px solid #444; }
+        .fighter-role-tag { font-size: 11px; padding: 4px 10px; border-radius: 10px; font-weight: bold; display: inline-block; margin-bottom: 8px; color: white; }
+        .role-attacker { background: #ff3366; box-shadow: 0 0 8px #ff3366; }
+        .role-defender { background: #2196f3; box-shadow: 0 0 8px #2196f3; }
+        .battle-hp-bar { background: #111; height: 15px; border-radius: 8px; margin: 8px 0; overflow: hidden; }
+        .battle-hp-fill { height: 100%; width: 100%; background: #00e676; transition: width 0.5s; }
+        .action-container { background: rgba(0,0,0,0.4); padding: 20px; border-radius: 12px; margin-top: 15px; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+        .btn-action { flex: 1; padding: 12px 5px; font-size: 14px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; color: #000; }
         .btn-action:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-atk-normal { background: #ff9800; } .btn-atk-heavy { background: #e53935; color: #fff; } .btn-atk-magic { background: #9c27b0; color: #fff; }
+        .btn-def-normal { background: #4caf50; } .btn-def-heavy { background: #03a9f4; } .btn-def-magic { background: #e91e63; color: #fff; }
+        .battle-log { background: #111; border: 1px solid #333; padding: 10px; height: 85px; overflow-y: auto; border-radius: 6px; margin-top: 15px; font-size: 13px; color: #00e676; text-align: left; line-height: 1.5; }
         
         /* ร้านค้า */
         .shop-item { background: #1f4068; padding: 10px; margin: 5px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
@@ -72,16 +83,6 @@
                 </select><br><br>
                 <button onclick="startSinglePlayer()">▶️ เริ่มเกมแบบออฟไลน์</button>
             </div>
-            
-            <div style="background: #1f4068; padding: 15px; border-radius: 10px;">
-                <h3 style="margin-top:0; color: #33fffc;">🌐 เล่นกับเพื่อน (Online)</h3>
-                <input type="text" id="room-input" placeholder="ชื่อห้อง..." style="padding:5px; margin-bottom:5px; width:80%;"><br>
-                <select id="player-select" style="padding: 5px;">
-                    <option value="0">P1 (สีแดง)</option>
-                    <option value="1">P2 (สีฟ้า)</option>
-                </select><br><br>
-                <button onclick="connectToFirebase()">⚡ สร้าง/เข้าห้องออนไลน์</button>
-            </div>
         </div>
     </div>
 
@@ -101,40 +102,43 @@
                 <span>🔮 คัมภีร์เวทไฟ (ปลดล็อกเวทมนตร์)</span>
                 <button onclick="buyItem('เวทไฟ', 0, 'magic', 200)">200 G</button>
             </div>
-            <button style="background: #e53935; color: white; width: 100%; margin-top: 15px;" onclick="closeShop()">❌ ออกจากร้าน</button>
+            <button style="background: #e53935; color: white; width: 100%; margin-top: 15px;" onclick="closeShop()">❌ ออกจากร้าน (ข้ามตา)</button>
         </div>
     </div>
 
-    <div class="overlay" id="battle-overlay" style="display:none;">
-        <div class="box" style="max-width: 700px; background: linear-gradient(135deg, #2c1a4d, #162447);">
-            <h2 id="battle-header" style="color: #ffeb3b; margin-top:0;">⚔️ ปะทะเดือด!</h2>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div class="fighter" id="f-left">
-                    <div id="f-left-name" style="font-size:18px; font-weight:bold;">P1</div>
-                    <div style="font-size:12px;">LV <span id="f-left-lv">1</span></div>
-                    <div class="hp-bar"><div class="hp-fill" id="f-left-hp"></div></div>
-                    <div id="f-left-hp-text" style="font-size:12px;">100/100</div>
+    <div class="battle-overlay" id="battle-overlay">
+        <div class="battle-box">
+            <div style="font-size: 26px; color: #ffeb3b; font-weight: bold; margin-bottom: 15px;">⚔️ ฉากดวลคำสั่ง Dokapon ⚔️</div>
+            <div class="battle-versus">
+                <div class="fighter" id="fighter-left">
+                    <div class="fighter-role-tag" id="f-left-role">ฝ่ายรุก</div>
+                    <div style="font-size:20px; font-weight:bold;" id="f-left-name">P1</div>
+                    <div style="font-size:12px; color:#aaa; margin:5px 0;">LV <span id="f-left-lv">1</span></div>
+                    <div>HP: <span id="f-left-hp-text">100/100</span></div>
+                    <div class="battle-hp-bar"><div class="battle-hp-fill" id="f-left-hp-bar"></div></div>
                 </div>
-                <div style="font-size: 24px; font-weight:bold;">VS</div>
-                <div class="fighter" id="f-right">
-                    <div id="f-right-name" style="font-size:18px; font-weight:bold;">Monster</div>
-                    <div style="font-size:12px;">LV <span id="f-right-lv">1</span></div>
-                    <div class="hp-bar"><div class="hp-fill" id="f-right-hp"></div></div>
-                    <div id="f-right-hp-text" style="font-size:12px;">100/100</div>
+                <div style="font-size: 30px; font-weight: bold; color: #ffeb3b;">VS</div>
+                <div class="fighter" id="fighter-right">
+                    <div class="fighter-role-tag" id="f-right-role">ฝ่ายรับ</div>
+                    <div style="font-size:20px; font-weight:bold;" id="f-right-name">มอนสเตอร์</div>
+                    <div style="font-size:12px; color:#aaa; margin:5px 0;">LV <span id="f-right-lv">1</span></div>
+                    <div>HP: <span id="f-right-hp-text">50/50</span></div>
+                    <div class="battle-hp-bar"><div class="battle-hp-fill" id="f-right-hp-bar"></div></div>
                 </div>
             </div>
-            <div id="action-prompt" style="margin: 15px 0; font-weight: bold; color: #33fffc;">เลือกคำสั่งของคุณ:</div>
-            <div style="display: flex; gap: 5px;" id="battle-buttons"></div>
-            <div id="battle-log-text" style="margin-top: 15px; font-size: 13px; color: #00e676; height: 60px; overflow: hidden;"></div>
+            <div class="action-container" id="action-container">
+                <div style="margin-bottom: 10px; font-size: 16px; color: #33fffc; font-weight: bold;" id="action-prompt">กรุณารอ...</div>
+                <div class="btn-group" id="battle-buttons"></div>
+            </div>
+            <div class="battle-log" id="battle-log-text"></div>
         </div>
     </div>
 
-    <h1>⚔️ Dokapon RPG</h1>
+    <h1>⚔️ Dokapon RPG (Multi-Mode)</h1>
     <div class="game-container" id="game-container">
         <div class="board" id="board"></div>
         <div class="controls-row">
-            <div class="status-panel" id="players-panel">
-                </div>
+            <div class="status-panel" id="players-panel"></div>
             <div class="action-panel">
                 <button class="btn-dice" id="dice-btn" onclick="rollDice()">🎲 ทอยลูกเต๋า</button>
                 <div class="log-box" id="log-box"></div>
@@ -143,7 +147,7 @@
     </div>
 
     <script>
-        // ขยายกระดาน 24 ช่อง (เดินวนรอบขอบ 7x7)
+        // ขยายกระดาน 24 ช่อง
         const boardData = [
             { id: 0, type: "start", name: "🏰 ปราสาท (จุดเริ่ม/ฮีล)", r: 1, c: 1 },
             { id: 1, type: "monster", name: "ทุ่งสไลม์", r: 1, c: 2 },
@@ -173,8 +177,6 @@
 
         let state = {};
         let myId = 0;
-        let isOnline = false;
-        let db, roomRef;
         const colors = ["#ff3366", "#33fffc", "#ffeb3b", "#8bc34a"];
 
         function createBoardUI() {
@@ -189,7 +191,6 @@
             });
         }
 
-        // ================= SETUP เกม =================
         function initGameState(playerCount, botCount) {
             let players = [];
             for (let i = 0; i < playerCount; i++) {
@@ -199,32 +200,20 @@
                     items: [], gold: 100, isBot: i >= playerCount - botCount
                 });
             }
-            return { turn: 0, gameActive: true, logs: ["🌟 เริ่มเกมแล้ว!"], players: players, combat: { active: false } };
+            return { turn: 0, gameActive: true, logs: ["🌟 เริ่มเกมแล้ว! กระดานแห่งการฟาร์มเปิดออก"], players: players, combat: { active: false } };
         }
 
         function startSinglePlayer() {
             let botCount = parseInt(document.getElementById('bot-count').value);
-            myId = 0; isOnline = false;
+            myId = 0;
             state = initGameState(1 + botCount, botCount);
-            startGameUI();
-        }
-
-        function connectToFirebase() {
-            // โค้ดเชื่อมต่อ Firebase เดิม (ตัดย่อเพื่อประหยัดพื้นที่ สามารถใส่ apiKey ของคุณเองได้)
-            alert("โหมดออนไลน์ยังไม่ได้ใส่ API Key รบกวนเล่นโหมดออฟไลน์ (เล่นคนเดียว) ไปก่อนนะครับ!");
-        }
-
-        function startGameUI() {
             document.getElementById('setup-overlay').style.display = 'none';
             document.getElementById('game-container').style.display = 'flex';
             createBoardUI();
             updateUI();
         }
 
-        function syncState() {
-            if (isOnline) roomRef.set(state); // ถ้าออนไลน์ให้ส่งไปฐานข้อมูล
-            else updateUI(); // ถ้าออฟไลน์ อัปเดตหน้าจอทันที
-        }
+        function syncState() { updateUI(); } // สำหรับ Offline Mode
 
         function pushLog(msg) {
             state.logs.push(msg);
@@ -233,11 +222,10 @@
         }
 
         function hasMagic(player) {
-            return player.items.some(i => i.includes('เวท') || i.includes('เวทย์') || i.includes('🔮') || i.includes('⚡'));
+            return player && player.items.some(i => i.includes('เวท') || i.includes('เวทย์') || i.includes('🔮') || i.includes('⚡'));
         }
 
         function updateUI() {
-            // สร้างการ์ดผู้เล่น
             const panel = document.getElementById('players-panel');
             panel.innerHTML = '';
             state.players.forEach((p, i) => {
@@ -250,18 +238,15 @@
                     </div>`;
             });
 
-            // อัปเดตโทเคนบนบอร์ด
             boardData.forEach(c => document.getElementById(`cell-${c.id}`).innerHTML = '');
             state.players.forEach(p => {
                 document.getElementById(`cell-${p.position}`).innerHTML += `<div class="token p${p.id}"></div>`;
             });
 
-            // อัปเดต Logs
             const logBox = document.getElementById('log-box');
             logBox.innerHTML = state.logs.map(m => `<div>${m}</div>`).join('');
             logBox.scrollTop = logBox.scrollHeight;
 
-            // ปุ่มทอยเต๋า
             const btn = document.getElementById('dice-btn');
             let isMyTurn = (state.turn === myId);
             let isBotTurn = state.players[state.turn].isBot;
@@ -270,7 +255,6 @@
             else if (state.combat.active) { btn.disabled = true; btn.innerText = "⚔️ กำลังต่อสู้..."; }
             else if (isBotTurn) { btn.disabled = true; btn.innerText = "🤖 บอทกำลังคิด..."; setTimeout(botAction, 1000); }
             else if (isMyTurn) { btn.disabled = false; btn.innerText = "🎲 ทอยลูกเต๋า"; }
-            else { btn.disabled = true; btn.innerText = "⏳ รอตาเพื่อน"; }
 
             updateCombatUI();
         }
@@ -281,41 +265,12 @@
             syncState();
         }
 
-        // ================= ระบบบอท (AI) =================
+        // ================= ระบบเดินบอร์ด =================
         function botAction() {
             if (state.combat.active || !state.players[state.turn].isBot) return;
-            rollDice(); // บอททอยเต๋า
+            rollDice();
         }
 
-        function botCombatAction() {
-            let cmb = state.combat;
-            let cAtk = cmb.currentAttacker; let cDef = cmb.currentDefender;
-            
-            // ให้บอทและมอนสเตอร์สุ่มสู้ (ถ้ามีเวทถึงจะใช้เวทได้)
-            let pData = null;
-            let isAttacking = false;
-            
-            if (cAtk !== -1 && state.players[cAtk].isBot && !cmb.attackerChoice) {
-                pData = state.players[cAtk]; isAttacking = true;
-            } else if (cDef !== -1 && state.players[cDef].isBot && !cmb.defenderChoice) {
-                pData = state.players[cDef]; isAttacking = false;
-            } else if (cAtk === -1 && !cmb.attackerChoice) {
-                isAttacking = true; pData = cmb.defMonster; // มอนสเตอร์บุก
-            } else if (cDef === -1 && !cmb.defenderChoice) {
-                isAttacking = false; pData = cmb.defMonster; // มอนสเตอร์รับ
-            } else { return; } // ไม่มีบอทต้องตัดสินใจ
-
-            setTimeout(() => {
-                let options = isAttacking ? ['🔥 ตีธรรมดา', '💥 ตีหนัก'] : ['🛡️ กันธรรมดา', '🛡️ กันหนัก'];
-                if (pData === cmb.defMonster || hasMagic(pData)) {
-                    options.push(isAttacking ? '🔮 ตีเวท' : '🔮 กันเวท'); // มอนและคนมีเวทใช้เวทได้
-                }
-                let choice = options[Math.floor(Math.random() * options.length)];
-                submitCombatAction(choice, isAttacking ? cAtk : cDef, true);
-            }, 800);
-        }
-
-        // ================= ระบบเดินบอร์ด =================
         function rollDice() {
             let p = state.players[state.turn];
             if (p.isStunned) {
@@ -328,21 +283,20 @@
             let oldPos = p.position;
             p.position = (oldPos + dice) % boardData.length;
 
-            // ระบบเดินผ่านจุดเริ่มต้น (Pass Start)
+            // เดินผ่านปราสาท (Pass Start) ฟื้นเลือด
             if (p.position < oldPos && p.position !== 0) {
                 p.hp = p.maxHp;
-                pushLog(`✨ <b>${p.name}</b> เดินผ่านปราสาท ได้รับการฟื้นฟู HP เต็ม!`);
+                pushLog(`✨ <b>${p.name}</b> เดินวนครบรอบผ่านปราสาท ได้รับการฟื้นฟู HP เต็ม!`);
             }
 
             let cell = boardData[p.position];
-            pushLog(`🎲 <b>${p.name}</b> ทอยได้ ${dice} เดินตกช่อง <b>${cell.name}</b>`);
+            pushLog(`🎲 <b>${p.name}</b> ทอยได้ ${dice} เดินตก <b>${cell.name}</b>`);
 
-            // เช็คว่าเดินชนคนอื่นไหม (PVP)
             let enemyIndex = state.players.findIndex(e => e.id !== p.id && e.position === p.position && e.position !== 0);
             if (enemyIndex !== -1) {
                 let enemy = state.players[enemyIndex];
                 pushLog(`⚔️💥 <b>${p.name} ชน ${enemy.name}! ดวล PVP ล่าค่าหัว!</b>`);
-                setupCombat(p.id, enemy.id, 'player', enemy);
+                setupCombat(p.id, enemy.id, 'player', null);
                 return;
             }
 
@@ -365,11 +319,11 @@
                 } else {
                     document.getElementById('shop-gold').innerText = p.gold;
                     document.getElementById('shop-overlay').style.display = 'flex';
-                    return; // รอคนกดซื้อ เลิกเทิร์นใน closeShop
+                    return; 
                 }
             } else if (cell.type === 'monster' || cell.type === 'worldboss') {
                 let mLv = cell.type === 'worldboss' ? p.lv + 5 : Math.max(1, p.lv + (Math.floor(Math.random() * 3) - 1));
-                let mName = cell.type === 'worldboss' ? "🐉 บอสมังกรโลก" : "👾 มอนสเตอร์";
+                let mName = cell.type === 'worldboss' ? "🐉 บอสโลก มังกรโบราณ" : "👾 มอนสเตอร์เจ้าถิ่น";
                 let mHp = mLv * 20 + 30; let mAtk = mLv * 6 + 10;
                 setupCombat(p.id, -1, 'monster', { name: mName, lv: mLv, hp: mHp, maxHp: mHp, atk: mAtk });
                 return;
@@ -377,7 +331,6 @@
             nextTurn();
         }
 
-        // ================= ระบบร้านค้า =================
         function buyItem(name, value, type, price) {
             let p = state.players[myId];
             if (p.gold >= price) {
@@ -392,11 +345,12 @@
         }
         function closeShop() { document.getElementById('shop-overlay').style.display = 'none'; nextTurn(); }
 
-        // ================= ระบบต่อสู้ =================
+        // ================= ระบบต่อสู้ที่ดึงมาจากของเก่าที่สมบูรณ์ =================
         function setupCombat(atkId, defId, type, defData) {
             state.combat = {
                 active: true, type: type, initiatorIdx: atkId, currentAttacker: atkId, currentDefender: defId,
-                attackerChoice: "", defenderChoice: "", log: "เริ่มการปะทะเดือด!", defMonster: type === 'monster' ? defData : null
+                attackerChoice: "", defenderChoice: "", log: "เริ่มการปะทะวัดใจ! เลือกคำสั่งของคุณเลย!", defMonster: type === 'monster' ? defData : null,
+                atkThinking: false, defThinking: false, resolving: false
             };
             syncState();
         }
@@ -407,100 +361,135 @@
             if (!cmb.active) { overlay.style.display = 'none'; return; }
             overlay.style.display = 'flex';
 
-            let isPvP = cmb.type === 'player';
-            let leftIdx = isPvP ? cmb.initiatorIdx : cmb.initiatorIdx; 
-            let rightIdx = isPvP ? (cmb.initiatorIdx === 0 ? cmb.currentDefender : cmb.currentDefender) : -1;
-            
-            // ฝั่งผู้ดึงเกมสู้ (ซ้าย)
-            let pLeft = state.players[leftIdx];
-            document.getElementById('f-left-name').innerText = pLeft.name;
-            document.getElementById('f-left-lv').innerText = pLeft.lv;
-            document.getElementById('f-left-hp-text').innerText = `${pLeft.hp}/${pLeft.maxHp}`;
-            document.getElementById('f-left-hp').style.width = (pLeft.hp / pLeft.maxHp * 100) + '%';
-            document.getElementById('f-left').style.borderColor = cmb.currentAttacker === leftIdx ? '#ff3366' : '#2196f3';
+            let cAtk = cmb.currentAttacker; 
+            let cDef = cmb.currentDefender;
+            let pAtk = state.players[cAtk];
+            let pDef = cDef === -1 ? cmb.defMonster : state.players[cDef];
 
-            // ฝั่งศัตรู (ขวา)
-            let pRight = isPvP ? state.players[cmb.currentDefender === leftIdx ? cmb.currentAttacker : cmb.currentDefender] : cmb.defMonster;
-            document.getElementById('f-right-name').innerText = pRight.name;
-            document.getElementById('f-right-lv').innerText = pRight.lv;
-            document.getElementById('f-right-hp-text').innerText = `${pRight.hp}/${pRight.maxHp}`;
-            document.getElementById('f-right-hp').style.width = (pRight.hp / pRight.maxHp * 100) + '%';
-            document.getElementById('f-right').style.borderColor = cmb.currentAttacker !== leftIdx ? '#ff3366' : '#2196f3';
+            // วาดฝั่งรุก (ซ้าย)
+            document.getElementById('f-left-name').innerText = pAtk.name;
+            document.getElementById('f-left-lv').innerText = pAtk.lv;
+            document.getElementById('f-left-hp-text').innerText = `${pAtk.hp}/${pAtk.maxHp}`;
+            document.getElementById('f-left-hp-bar').style.width = (pAtk.hp / pAtk.maxHp * 100) + '%';
+            document.getElementById('fighter-left').className = "fighter attacker-role";
+            document.getElementById('f-left-role').innerText = "⚔️ ฝ่ายรุก";
+            document.getElementById('f-left-role').className = "fighter-role-tag role-attacker";
+
+            // วาดฝั่งรับ (ขวา)
+            document.getElementById('f-right-name').innerText = pDef.name;
+            document.getElementById('f-right-lv').innerText = pDef.lv;
+            document.getElementById('f-right-hp-text').innerText = `${pDef.hp}/${pDef.maxHp}`;
+            document.getElementById('f-right-hp-bar').style.width = (pDef.hp / pDef.maxHp * 100) + '%';
+            document.getElementById('fighter-right').className = "fighter defender-role";
+            document.getElementById('f-right-role').innerText = "🛡️ ฝ่ายรับ";
+            document.getElementById('f-right-role').className = "fighter-role-tag role-defender";
 
             document.getElementById('battle-log-text').innerHTML = cmb.log;
 
-            // สร้างปุ่มกด
-            let btnZone = document.getElementById('battle-buttons');
-            let amIInvolved = (myId === cmb.currentAttacker || myId === cmb.currentDefender);
-            let myPlayer = state.players[myId];
-            let hasMag = hasMagic(myPlayer); // เช็คว่ามีเวทไหม
+            // 🤖 ระบบ AI ออโต้ (แก้ไขบั๊กค้างแล้ว)
+            if (!cmb.resolving) {
+                let atkIsBot = (cAtk === -1 || state.players[cAtk].isBot);
+                let defIsBot = (cDef === -1 || state.players[cDef].isBot);
 
-            if (!amIInvolved || myPlayer.isBot) {
-                btnZone.innerHTML = "<p>⏳ กำลังดูการต่อสู้ / บอทกำลังตัดสินใจ...</p>";
-                botCombatAction();
-            } else if (myId === cmb.currentAttacker && !cmb.attackerChoice) {
-                btnZone.innerHTML = `
-                    <button class="btn-action" style="background:#ff9800" onclick="submitCombatAction('🔥 ตีธรรมดา')">🔥 ตีธรรมดา</button>
-                    <button class="btn-action" style="background:#e53935;color:white" onclick="submitCombatAction('💥 ตีหนัก')">💥 ตีหนัก</button>
-                    <button class="btn-action" style="background:#9c27b0;color:white" ${!hasMag ? 'disabled' : ''} onclick="submitCombatAction('🔮 ตีเวท')">🔮 ตีเวท ${!hasMag?'(ล็อก)':''}</button>`;
-            } else if (myId === cmb.currentDefender && !cmb.defenderChoice) {
-                btnZone.innerHTML = `
-                    <button class="btn-action" style="background:#4caf50" onclick="submitCombatAction('🛡️ กันธรรมดา')">🛡️ กันธรรมดา</button>
-                    <button class="btn-action" style="background:#03a9f4" onclick="submitCombatAction('🛡️ กันหนัก')">🛡️ กันหนัก</button>
-                    <button class="btn-action" style="background:#e91e63;color:white" ${!hasMag ? 'disabled' : ''} onclick="submitCombatAction('🔮 กันเวท')">🔮 กันเวท ${!hasMag?'(ล็อก)':''}</button>`;
+                if (atkIsBot && !cmb.attackerChoice && !cmb.atkThinking) {
+                    cmb.atkThinking = true;
+                    setTimeout(() => {
+                        let opts = ['🔥 ตีธรรมดา', '💥 ตีหนัก'];
+                        if (cAtk === -1 || hasMagic(pAtk)) opts.push('🔮 ตีเวท');
+                        state.combat.attackerChoice = opts[Math.floor(Math.random() * opts.length)];
+                        state.combat.atkThinking = false;
+                        syncState();
+                    }, 800);
+                }
+
+                if (defIsBot && !cmb.defenderChoice && !cmb.defThinking) {
+                    cmb.defThinking = true;
+                    setTimeout(() => {
+                        let opts = ['🛡️ กันธรรมดา', '🛡️ กันหนัก'];
+                        if (cDef === -1 || hasMagic(pDef)) opts.push('🔮 กันเวท');
+                        state.combat.defenderChoice = opts[Math.floor(Math.random() * opts.length)];
+                        state.combat.defThinking = false;
+                        syncState();
+                    }, 800);
+                }
             }
 
+            // จัดการปุ่มของผู้เล่น
+            let btnZone = document.getElementById('battle-buttons');
+            let promptText = document.getElementById('action-prompt');
+            let myPlayer = state.players[myId];
+            let hasMag = hasMagic(myPlayer);
+
+            if (myId === cAtk && !cmb.attackerChoice) {
+                promptText.innerText = "👉 คุณเป็นฝ่ายรุก! เลือกแผนโจมตี:";
+                btnZone.innerHTML = `
+                    <button class="btn-action btn-atk-normal" onclick="submitCombatAction('🔥 ตีธรรมดา')">🔥 ตีธรรมดา</button>
+                    <button class="btn-action btn-atk-heavy" onclick="submitCombatAction('💥 ตีหนัก')">💥 ตีหนัก</button>
+                    <button class="btn-action btn-atk-magic" ${!hasMag?'disabled':''} onclick="submitCombatAction('🔮 ตีเวท')">🔮 ตีเวท ${!hasMag?'(ล็อก)':''}</button>`;
+            } else if (myId === cDef && !cmb.defenderChoice) {
+                promptText.innerText = "🔒 คุณเป็นฝ่ายรับ! ดักแผนป้องกัน:";
+                btnZone.innerHTML = `
+                    <button class="btn-action btn-def-normal" onclick="submitCombatAction('🛡️ กันธรรมดา')">🛡️ กันธรรมดา</button>
+                    <button class="btn-action btn-def-heavy" onclick="submitCombatAction('🛡️ กันหนัก')">🛡️ กันหนัก</button>
+                    <button class="btn-action btn-def-magic" ${!hasMag?'disabled':''} onclick="submitCombatAction('🔮 กันเวท')">🔮 กันเวท ${!hasMag?'(ล็อก)':''}</button>`;
+            } else {
+                promptText.innerText = "⏳ รออีกฝ่ายตัดสินใจ หรือกำลังคำนวณผล...";
+                btnZone.innerHTML = "";
+            }
+
+            // ถ้าเลือกครบทั้งคู่ ให้คำนวณผลลัพธ์
             if (cmb.attackerChoice && cmb.defenderChoice && !cmb.resolving) {
                 cmb.resolving = true;
                 setTimeout(resolveCombat, 1500);
             }
         }
 
-        function submitCombatAction(choice, forceId = null, isBot = false) {
-            let actorId = forceId !== null ? forceId : myId;
+        function submitCombatAction(choice) {
             let cmb = state.combat;
-            if (actorId === cmb.currentAttacker) cmb.attackerChoice = choice;
-            if (actorId === cmb.currentDefender) cmb.defenderChoice = choice;
+            if (myId === cmb.currentAttacker) cmb.attackerChoice = choice;
+            else if (myId === cmb.currentDefender) cmb.defenderChoice = choice;
             syncState();
         }
 
         function resolveCombat() {
             let cmb = state.combat;
             let cAtk = cmb.currentAttacker; let cDef = cmb.currentDefender;
-            let pAtk = cAtk === -1 ? cmb.defMonster : state.players[cAtk];
+            let pAtk = state.players[cAtk];
             let pDef = cDef === -1 ? cmb.defMonster : state.players[cDef];
             
             let atk = cmb.attackerChoice; let def = cmb.defenderChoice;
-            let dDef = 0; let dAtk = 0; let log = `💥 [${atk}] VS [${def}]<br>`;
+            let dmgToDef = 0; let dmgToAtk = 0;
+            let baseDmg = pAtk.atk;
+            let logMsg = `⚔️ ผลดวลคำสั่ง: ฝ่ายรุกใช้ [${atk}] ⚡ ฝ่ายรับดักด้วย [${def}]<br>`;
 
+            // โลจิกคำนวณดาเมจแบบเป่ายิ้งฉุบ จากโค้ดต้นฉบับของคุณ
             if (atk === '🔥 ตีธรรมดา') {
-                if (def === '🛡️ กันธรรมดา') dDef = pAtk.atk * 0.4;
-                else if (def === '🛡️ กันหนัก') dDef = pAtk.atk * 1.5;
-                else dDef = pAtk.atk;
-            } else if (atk === '💥 ตีหนัก') {
-                if (def === '🛡️ กันหนัก') dAtk = pDef.atk * 1.5;
-                else dDef = pAtk.atk * 2.5;
-            } else if (atk === '🔮 ตีเวท') {
-                if (def === '🔮 กันเวท') dAtk = pDef.atk * 0.8;
-                else dDef = pAtk.atk * 2.0;
+                if (def === '🛡️ กันธรรมดา') { dmgToDef = Math.floor(baseDmg * 0.4); logMsg += `🛡️ บล็อกสำเร็จ! กันธรรมดาลดพลังตีธรรมดาได้เยอะ`; } 
+                else if (def === '🛡️ กันหนัก') { dmgToDef = Math.floor(baseDmg * 1.3); logMsg += `❌ ป้องกันหนักหลงทาง เจอความไวสปีดตีธรรมดาสวนหน้าสั่น!`; } 
+                else if (def === '🔮 กันเวท') { dmgToDef = baseDmg; logMsg += `💥 โล่เวทมนตร์เปล่าประโยชน์ต่อแรงกายภาพ!`; }
+            } 
+            else if (atk === '💥 ตีหนัก') {
+                if (def === '🛡️ กันหนัก') { dmgToAtk = Math.floor(pDef.atk * 1.6); logMsg += `⚡ คานเตอร์!! ป้องกันหนักดักทางจังหวะทุบคริติคอลสมบูรณ์แบบ สะท้อนแรงย้อนใส่ฝั่งรุกปางตาย!`; } 
+                else if (def === '🛡️ กันธรรมดา' || def === '🔮 กันเวท') { dmgToDef = Math.floor(baseDmg * 2.3); logMsg += `💥💥 โล่แตกกระจุย!! ดาเมจคริติคอลทะลวงแนวป้องกันทุกชนิด!`; }
+            } 
+            else if (atk === '🔮 ตีเวท') {
+                if (def === '🔮 กันเวท') { dmgToAtk = Math.floor(pDef.atk * 0.6); logMsg += `🔮 กระจกมนตรา! กันเวทสะท้อนคลื่นพลังเวทระเบิดกลับใส่คนร่าย!`; } 
+                else if (def === '🛡️ กันธรรมดา' || def === '🛡️ กันหนัก') { dmgToDef = Math.floor(baseDmg * 1.9); logMsg += `🌋 มหาเวทโจมตีทะลุโล่กายภาพอย่างไร้ความหมาย!`; }
             }
 
-            pDef.hp = Math.max(0, Math.floor(pDef.hp - dDef));
-            pAtk.hp = Math.max(0, Math.floor(pAtk.hp - dAtk));
+            pDef.hp = Math.max(0, pDef.hp - dmgToDef);
+            pAtk.hp = Math.max(0, pAtk.hp - dmgToAtk);
 
             if (pDef.hp <= 0 || pAtk.hp <= 0) {
-                let winner = pDef.hp <= 0 ? pAtk : pDef;
-                let loser = pDef.hp <= 0 ? pDef : pAtk;
-                let wId = pDef.hp <= 0 ? cAtk : cDef;
-                let lId = pDef.hp <= 0 ? cDef : cAtk;
-                
-                log += `🏁 <b>${winner.name} ปลิดชีพศัตรูสำเร็จ!</b>`;
-                cmb.log = log; syncState();
-                setTimeout(() => endCombat(wId, lId), 2000);
+                let winnerName = pDef.hp <= 0 ? pAtk.name : pDef.name;
+                logMsg += `<br>🏁 <b>${winnerName} ได้รับชัยชนะเด็ดขาดในศึกนี้!</b>`;
+                cmb.log = logMsg; syncState();
+                setTimeout(() => endCombat(pDef.hp <= 0 ? cAtk : cDef, pDef.hp <= 0 ? cDef : cAtk), 2500);
             } else {
                 cmb.currentAttacker = cDef; cmb.currentDefender = cAtk;
-                cmb.attackerChoice = ""; cmb.defenderChoice = ""; cmb.resolving = false;
-                cmb.log = log + "🔄 สลับฝั่งรุก-รับ!";
+                cmb.attackerChoice = ""; cmb.defenderChoice = ""; 
+                cmb.resolving = false; cmb.atkThinking = false; cmb.defThinking = false;
+                cmb.log = logMsg + `<br>🔄 สลับฝั่งเปิดฉากดวลรอบถัดไป!`;
                 syncState();
             }
         }
@@ -512,20 +501,18 @@
             let defMonster = state.combat.defMonster;
 
             if (wId !== -1) { 
-                // คนชนะ
                 let gainedLv = lId === -1 ? defMonster.lv : pLoser.lv;
-                let gainedGold = lId === -1 ? defMonster.lv * 20 : Math.floor(pLoser.gold / 2); // ชนะคนได้เงินครึ่งนึงของศัตรู
+                let gainedGold = lId === -1 ? defMonster.lv * 20 : Math.floor(pLoser.gold / 2);
                 
                 pWinner.lv += gainedLv; pWinner.atk += gainedLv * 5; pWinner.maxHp += gainedLv * 10; pWinner.hp = pWinner.maxHp;
                 pWinner.gold += gainedGold;
-                logMsg += `🏆 <b>${pWinner.name}</b> ชนะ! LV+${gainedLv} (เป็น LV.${pWinner.lv}) ได้เงิน 💰${gainedGold} G`;
+                logMsg += `🏆 <b>${pWinner.name}</b> ชนะ! LV พุ่งไปที่ ${pWinner.lv} พร้อมปล้นเงิน 💰${gainedGold} G`;
 
                 if (lId !== -1) {
                     pLoser.hp = 10; pLoser.isStunned = true; pLoser.position = 0; pLoser.gold -= gainedGold;
-                    logMsg += ` และเตะ <b>${pLoser.name}</b> กลับบ้าน!`;
+                    logMsg += ` และเตะ <b>${pLoser.name}</b> กลับปราสาท!`;
                 }
             } else {
-                // มอนสเตอร์ชนะ
                 pLoser.hp = 10; pLoser.isStunned = true; pLoser.position = 0;
                 let lostGold = Math.floor(pLoser.gold / 3); pLoser.gold -= lostGold;
                 logMsg += `💀 <b>${pLoser.name}</b> แพ้มอนสเตอร์ ของตก 💰${lostGold} G ถูกหามส่งปราสาท!`;
@@ -534,9 +521,9 @@
             pushLog(logMsg);
             state.combat.active = false;
             
-            // เช็คจบเกม
             if (pWinner && pWinner.lv >= 50) {
-                state.gameActive = false; pushLog(`🎉👑🏆 <b>${pWinner.name} ชนะเกมส์แล้ว (LV 50)!</b>`); alert(`${pWinner.name} คือผู้ชนะ!`);
+                state.gameActive = false; pushLog(`🎉👑🏆 <b>${pWinner.name} แตะ LV 50 ชนะเกมส์แล้ว!</b>`); 
+                setTimeout(() => alert(`${pWinner.name} คือผู้ชนะ!`), 500);
             }
             
             nextTurn();
