@@ -138,31 +138,57 @@
             <button class="btn-shop-toggle" id="shop-btn" onclick="toggleShopUI()">🛒 เปิด/ปิด ร้านค้าไอเทม</button>
 
             <!-- แสดงผลร้านค้า -->
-            <div class="shop-container" id="shop-container">
-                <h3 style="margin-top:0; color:#ffc107; text-align:center;">🛒 ร้านค้าปราสาทเวทมนตร์</h3>
-                <div class="shop-grid">
-                    <div class="shop-item">
-                        <span>⚔️ ดาบเหล็กกล้า (+8 ATK)</span>
-                        <b style="color:#00e676;">100 Gold</b>
-                        <button onclick="buyItem('⚔️ ดาบเหล็กกล้า', 'atk', 8, 100)">ซื้อไอเทม</button>
-                    </div>
-                    <div class="shop-item">
-                        <span>🛡️ เกราะเหล็ก (+30 MaxHP)</span>
-                        <b style="color:#00e676;">120 Gold</b>
-                        <button onclick="buyItem('🛡️ เกราะเหล็ก', 'hp', 30, 120)">ซื้อไอเทม</button>
-                    </div>
-                    <div class="shop-item">
-                        <span>🔮 คัมภีร์ไฟ (เปิดใช้สกิลเวท)</span>
-                        <b style="color:#00e676;">150 Gold</b>
-                        <button onclick="buyItem('🔮 คัมภีร์ไฟ', 'spell', 1, 150)">ซื้อไอเทม</button>
-                    </div>
-                    <div class="shop-item">
-                        <span>⚡ คัมภีร์สายฟ้า (เปิดใช้สกิลเวท)</span>
-                        <b style="color:#00e676;">150 Gold</b>
-                        <button onclick="buyItem('⚡ คัมภีร์สายฟ้า', 'spell', 1, 150)">ซื้อไอเทม</button>
-                    </div>
-                </div>
-            </div>
+            <!-- แสดงผลร้านค้าที่เพิ่มของมากขึ้น -->
+<div class="shop-container" id="shop-container">
+    <h3 style="margin-top:0; color:#ffc107; text-align:center;">🛒 คลังอาวุธและเวทมนตร์หลวง</h3>
+    <div class="shop-grid">
+        <div class="shop-item">
+            <span>⚔️ มีดสั้นสลักลาย (+4 ATK)</span>
+            <b style="color:#00e676;">40 Gold</b>
+            <button onclick="buyItem('⚔️ มีดสั้นสลักลาย', 'atk', 4, 40)">ซื้อไอเทม</button>
+        </div>
+        <div class="shop-item">
+            <span>⚔️ ดาบเหล็กกล้า (+10 ATK)</span>
+            <b style="color:#00e676;">120 Gold</b>
+            <button onclick="buyItem('⚔️ ดาบเหล็กกล้า', 'atk', 10, 120)">ซื้อไอเทม</button>
+        </div>
+        <div class="shop-item">
+            <span>⚔️ ขวานยักษ์เบอร์เซิร์ก (+22 ATK)</span>
+            <b style="color:#00e676;">250 Gold</b>
+            <button onclick="buyItem('⚔️ ขวานยักษ์เบอร์เซิร์ก', 'atk', 22, 250)">ซื้อไอเทม</button>
+        </div>
+        <div class="shop-item">
+            <span>🛡️ โล่ไม้โอ๊ค (+15 MaxHP)</span>
+            <b style="color:#00e676;">50 Gold</b>
+            <button onclick="buyItem('🛡️ โล่ไม้โอ๊ค', 'hp', 15, 50)">ซื้อไอเทม</button>
+        </div>
+        <div class="shop-item">
+            <span>🛡️ เกราะเหล็ก (+40 MaxHP)</span>
+            <b style="color:#00e676;">160 Gold</b>
+            <button onclick="buyItem('🛡️ เกราะเหล็ก', 'hp', 40, 160)">ซื้อไอเทม</button>
+        </div>
+        <div class="shop-item">
+            <span>🛡️ ชุดคลุมเทพพยากรณ์ (+90 MaxHP)</span>
+            <b style="color:#00e676;">320 Gold</b>
+            <button onclick="buyItem('🛡️ ชุดคลุมเทพพยากรณ์', 'hp', 90, 320)">ซื้อไอเทม</button>
+        </div>
+        <div class="shop-item">
+            <span>🔮 คัมภีร์ไฟ (เปิดใช้สกิลเวท)</span>
+            <b style="color:#00e676;">130 Gold</b>
+            <button onclick="buyItem('🔮 คัมภีร์ไฟ', 'spell', 1, 130)">ซื้อไอเทม</button>
+        </div>
+        <div class="shop-item">
+            <span>⚡ คัมภีร์สายฟ้า (เปิดใช้สกิลเวท)</span>
+            <b style="color:#00e676;">130 Gold</b>
+            <button onclick="buyItem('⚡ คัมภีร์สายฟ้า', 'spell', 1, 130)">ซื้อไอเทม</button>
+        </div>
+        <div class="shop-item">
+            <span>☄️ มหาเวทอุกกาบาต (เปิดใช้สกิลเวท)</span>
+            <b style="color:#00e676;">280 Gold</b>
+            <button onclick="buyItem('☄️ มหาเวทอุกกาบาต', 'spell', 1, 280)">ซื้อไอเทม</button>
+        </div>
+    </div>
+</div>
 
             <div>
                 <h4 style="margin: 5px 0;">บันทึกเหตุการณ์ในแมพ:</h4>
@@ -546,12 +572,13 @@
                 player.hp = player.maxHp;
                 nextTurn();
             } 
-            else if (cell.type === 'chest') {
-                let goldEarned = player.lv * 15 + Math.floor(Math.random() * 30);
-                player.gold += goldEarned;
-                pushLog(`🎁 <b>${player.name}</b> เปิดหีบสมบัติ ได้รับเงินมา <b>${goldEarned} Gold</b>`);
-                nextTurn();
-            }
+else if (cell.type === 'chest') {
+    // ปรับเงินจากหีบให้ได้น้อยลงและหายากขึ้น (เดิมได้เยอะกว่านี้)
+    let goldEarned = Math.floor(Math.random() * 25) + 10; 
+    player.gold += goldEarned;
+    pushLog(`🎁 <b>${player.name}</b> เปิดหีบสมบัติเก่าขี้ตืด ได้รับเงินมาเพียง <b>${goldEarned} Gold</b>`);
+    nextTurn();
+}
             else if (cell.type === 'magictower') {
                 const spells = ["🔮 คัมภีร์ไฟ", "⚡ คัมภีร์สายฟ้า"];
                 let spell = spells[Math.floor(Math.random() * spells.length)];
@@ -777,65 +804,70 @@
         }
 
         function completeCombatRewards(winnerIdx, loserIdx) {
-            let logSummary = "";
-            let monster = gameState.combat.defMonster;
+    let logSummary = "";
+    let monster = gameState.combat.defMonster;
 
-            if (winnerIdx !== -1) {
-                let winP = gameState.players[winnerIdx];
-                
-                if (loserIdx === -1) {
-                    // กรณีชนะมอนสเตอร์
-                    let bonusLv = Math.max(1, monster.lv);
-                    let goldReward = bonusLv * 25 + Math.floor(Math.random() * 30);
-                    
-                    winP.lv += bonusLv;
-                    winP.atk += bonusLv * 5;
-                    winP.maxHp += bonusLv * 12;
-                    winP.hp = winP.maxHp; 
-                    winP.gold += goldReward;
-
-                    logSummary = `🏆 <b>${winP.name}</b> ปราบ ${monster.name} ได้เงิน <b>${goldReward} Gold</b> และอัปเลเวลขึ้น +${bonusLv}!`;
-                } else {
-                    // ชนะ PVP: บังคับยึดขโมยเงินทั้งหมดของผู้แพ้มาเป็นของตัวเอง!
-                    let loseP = gameState.players[loserIdx];
-                    let stolenGold = loseP.gold;
-                    
-                    loseP.hp = 10;
-                    loseP.isStunned = true;
-                    loseP.position = 0; // ส่งกลับเมือง
-                    loseP.gold = 0; // สูญเสียเงินหมดตัว
-                    
-                    winP.lv += Math.max(1, loseP.lv);
-                    winP.atk += Math.max(1, loseP.lv) * 5;
-                    winP.maxHp += Math.max(1, loseP.lv) * 12;
-                    winP.hp = winP.maxHp;
-                    winP.gold += stolenGold;
-
-                    logSummary = `🏆👑 <b>${winP.name}</b> บดขยี้คู่แข่งใน PVP ปล้นขโมยเงินทั้งหมดมา <b>${stolenGold} Gold</b> พร้อมส่งศัตรูกลับฐานบ้านเกิด!`;
-                }
-            } else {
-                // มอนสเตอร์ตบผู้เล่นตาย
-                let loseP = gameState.players[loserIdx];
-                loseP.hp = 10;
-                loseP.isStunned = true;
-                loseP.position = 0;
-                logSummary = `💀 <b>${loseP.name}</b> สู้มอนสเตอร์ไม่ไหว พ่ายแพ้ยับเยินบาดเจ็บหนักถูกหามส่งจุดเริ่มต้น!`;
-            }
-
-            pushLog(logSummary);
+    if (winnerIdx !== -1) {
+        let winP = gameState.players[winnerIdx];
+        
+        if (loserIdx === -1) {
+            // --- กรณีชนะมอนสเตอร์ (ปรับปรุงตามเงื่อนไขใหม่) ---
             
-            // เช็กประกาศผู้ชนะเลเวล 50
-            gameState.players.forEach(p => {
-                if (p.lv >= 50 && gameState.gameActive) {
-                    gameState.gameActive = false;
-                    pushLog(`🎉👑🏆 <b>จบแมทช์อย่างเป็นทางการ! ${p.name} พลังเลเวลทะลุถึง LV 50 ยึดครองกระดานสำเร็จ!</b> 👑🎉`);
-                    alert(`ยินดีด้วยกับ ${p.name} เป็นผู้ชนะเลเวลถึง 50!`);
-                }
-            });
+            // 1. เลเวลได้แค่ครึ่งเดียวของมอนสเตอร์ที่ตี และ ปัดเศษขึ้น (Math.ceil)
+            let bonusLv = Math.ceil(monster.lv / 2); 
+            
+            // 2. เงินหายากขึ้น (ลดสูตรการสุ่มเงินรางวัลลงอย่างมาก)
+            let goldReward = Math.ceil(monster.lv * 3) + Math.floor(Math.random() * 10);
+            
+            winP.lv += bonusLv;
+            winP.atk += bonusLv * 5;
+            winP.maxHp += bonusLv * 12;
+            winP.hp = winP.maxHp; 
+            winP.gold += goldReward;
 
-            gameState.combat = { active: false };
-            nextTurn();
+            logSummary = `🏆 <b>${winP.name}</b> ปราบ ${monster.name} (LV ${monster.lv}) ได้เงินสุดฝืดเคือง <b>${goldReward} Gold</b> และได้เลเวลเพียงครึ่งเดียวปัดเศษขึ้น: +${bonusLv} LV!`;
+        } else {
+            // ชนะ PVP: ขโมยเงินหมดตัวเหมือนเดิม
+            let loseP = gameState.players[loserIdx];
+            let stolenGold = loseP.gold;
+            
+            loseP.hp = 10;
+            loseP.isStunned = true;
+            loseP.position = 0; 
+            loseP.gold = 0; 
+            
+            // ชนะคนได้เลเวลตามปกติ
+            winP.lv += Math.max(1, loseP.lv);
+            winP.atk += Math.max(1, loseP.lv) * 5;
+            winP.maxHp += Math.max(1, loseP.lv) * 12;
+            winP.hp = winP.maxHp;
+            winP.gold += stolenGold;
+
+            logSummary = `🏆👑 <b>${winP.name}</b> บดขยี้คู่แข่งใน PVP ปล้นขโมยเงินทั้งหมดมา <b>${stolenGold} Gold</b> พร้อมส่งศัตรูกลับฐานบ้านเกิด!`;
         }
+    } else {
+        // มอนสเตอร์ตบผู้เล่นตาย
+        let loseP = gameState.players[loserIdx];
+        loseP.hp = 10;
+        loseP.isStunned = true;
+        loseP.position = 0;
+        logSummary = `💀 <b>${loseP.name}</b> สู้มอนสเตอร์ไม่ไหว พ่ายแพ้ยับเยินบาดเจ็บหนักถูกหามส่งจุดเริ่มต้น!`;
+    }
+
+    pushLog(logSummary);
+    
+    // เช็กประกาศผู้ชนะเลเวล 50
+    gameState.players.forEach(p => {
+        if (p.lv >= 50 && gameState.gameActive) {
+            gameState.gameActive = false;
+            pushLog(`🎉👑🏆 <b>จบแมทช์อย่างเป็นทางการ! ${p.name} พลังเลเวลทะลุถึง LV 50 ยึดครองกระดานสำเร็จ!</b> 👑🎉`);
+            alert(`ยินดีด้วยกับ ${p.name} เป็นผู้ชนะเลเวลถึง 50!`);
+        }
+    });
+
+    gameState.combat = { active: false };
+    nextTurn();
+}
     </script>
 </body>
-</html>
+</html> chest
