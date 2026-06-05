@@ -394,39 +394,70 @@
             });
         }
 
-        function handleCombatUI() {
+       function handleCombatUI() {
             const cmb = gameState.combat;
             const overlay = document.getElementById('battle-overlay');
             if (!cmb || !cmb.active) { overlay.style.display = 'none'; return; }
 
             overlay.style.display = 'flex';
             
-            let p1Data = gameState.players[0]; 
-            let p2Data = cmb.type === 'player' ? gameState.players[1] : cmb.defMonster;
+            let isPvP = (cmb.type === 'player');
+            
+            // 🛠️ แก้บั๊ก: กำหนดผู้เล่นฝั่งซ้าย
+            // ถ้าเป็น PVP ล็อกให้ P1 อยู่ซ้าย / แต่ถ้าสู้มอนสเตอร์ ให้ดึงสเตตัสคนที่เปิดศึก (initiator) มาไว้ฝั่งซ้าย
+            let leftPlayerIdx = isPvP ? 0 : cmb.initiatorIdx;
+            let pLeftData = gameState.players[leftPlayerIdx]; 
+            
+            // 🛠️ กำหนดศัตรูฝั่งขวา:
+            // ถ้าเป็น PVP คือ P2 / ถ้าสู้มอนสเตอร์ คือ มอนสเตอร์
+            let pRightData = isPvP ? gameState.players[1] : cmb.defMonster;
+            
             let cAtk = cmb.currentAttacker;
 
-            // --- ฝั่งซ้าย (ผู้เล่น 1) ---
-            document.getElementById('f-left-lv').innerText = p1Data.lv;
-            document.getElementById('f-left-hp-text').innerText = p1Data.hp;
-            document.getElementById('f-left-maxhp').innerText = p1Data.maxHp;
-            document.getElementById('f-left-hp-bar').style.width = (p1Data.hp / p1Data.maxHp * 100) + '%';
+            // --- ⚔️ อัปเดต UI ฝั่งซ้าย ---
+            let leftNameEl = document.getElementById('fighter-left').children[1]; // ดึง div ที่แสดงชื่อ
+            if (leftPlayerIdx === 0) {
+                leftNameEl.innerText = "🔴 ผู้เล่น 1 (P1)";
+                leftNameEl.style.color = "#ff3366";
+                document.getElementById('fighter-left').className = "fighter team-p1";
+            } else {
+                leftNameEl.innerText = "🔵 ผู้เล่น 2 (P2)";
+                leftNameEl.style.color = "#33fffc";
+                document.getElementById('fighter-left').className = "fighter team-p2";
+            }
+
+            document.getElementById('f-left-lv').innerText = pLeftData.lv;
+            document.getElementById('f-left-hp-text').innerText = pLeftData.hp;
+            document.getElementById('f-left-maxhp').innerText = pLeftData.maxHp;
+            document.getElementById('f-left-hp-bar').style.width = (pLeftData.hp / pLeftData.maxHp * 100) + '%';
             
             let leftRoleTag = document.getElementById('f-left-role');
-            if (cAtk === 0) {
+            if (cAtk === leftPlayerIdx) {
                 leftRoleTag.innerText = "⚔️ ฝ่ายรุก (โจมตี)"; leftRoleTag.className = "fighter-role-tag role-attacker";
             } else {
                 leftRoleTag.innerText = "🛡️ ฝ่ายรับ (ป้องกัน)"; leftRoleTag.className = "fighter-role-tag role-defender";
             }
 
-            // --- ฝั่งขวา (ผู้เล่น 2 หรือ มอนสเตอร์) ---
-            document.getElementById('f-right-name').innerText = cmb.type === 'player' ? "🔵 ผู้เล่น 2 (P2)" : p2Data.name;
-            document.getElementById('f-right-lv').innerText = p2Data.lv;
-            document.getElementById('f-right-hp-text').innerText = p2Data.hp;
-            document.getElementById('f-right-maxhp').innerText = p2Data.maxHp;
-            document.getElementById('f-right-hp-bar').style.width = (p2Data.hp / p2Data.maxHp * 100) + '%';
+            // --- 🛡️ อัปเดต UI ฝั่งขวา ---
+            let rightNameEl = document.getElementById('f-right-name');
+            if (isPvP) {
+                rightNameEl.innerText = "🔵 ผู้เล่น 2 (P2)";
+                rightNameEl.style.color = "#33fffc";
+                document.getElementById('fighter-right').className = "fighter team-p2";
+            } else {
+                rightNameEl.innerText = pRightData.name;
+                rightNameEl.style.color = "#ffeb3b"; // สีทองสำหรับมอนสเตอร์
+                document.getElementById('fighter-right').className = "fighter"; // เอาสีขอบทีมออก
+            }
+            
+            document.getElementById('f-right-lv').innerText = pRightData.lv;
+            document.getElementById('f-right-hp-text').innerText = pRightData.hp;
+            document.getElementById('f-right-maxhp').innerText = pRightData.maxHp;
+            document.getElementById('f-right-hp-bar').style.width = (pRightData.hp / pRightData.maxHp * 100) + '%';
 
             let rightRoleTag = document.getElementById('f-right-role');
-            if (cAtk === 1 || cAtk === -1) {
+            let rightCombatIdx = isPvP ? 1 : -1;
+            if (cAtk === rightCombatIdx) {
                 rightRoleTag.innerText = "⚔️ ฝ่ายรุก (โจมตี)"; rightRoleTag.className = "fighter-role-tag role-attacker";
             } else {
                 rightRoleTag.innerText = "🛡️ ฝ่ายรับ (ป้องกัน)"; rightRoleTag.className = "fighter-role-tag role-defender";
@@ -434,7 +465,7 @@
 
             document.getElementById('battle-log-text').innerHTML = cmb.log;
 
-            // --- จัดการปุ่มกดตามบทบาทของตัวเอง ---
+            // --- 🕹️ จัดการปุ่มกดตามบทบาทของตัวเอง ---
             const promptText = document.getElementById('action-prompt');
             const btnZone = document.getElementById('battle-buttons');
             btnZone.innerHTML = '';
