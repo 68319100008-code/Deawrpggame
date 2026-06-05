@@ -363,7 +363,9 @@ function updateCombatUI() {
 
             let cAtk = cmb.currentAttacker; 
             let cDef = cmb.currentDefender;
-            let pAtk = state.players[cAtk];
+            
+            // 🛠️ แก้ไข: ป้องกัน Error ถ้าฝ่ายรุก/ฝ่ายรับเป็นมอนสเตอร์ (-1)
+            let pAtk = cAtk === -1 ? cmb.defMonster : state.players[cAtk];
             let pDef = cDef === -1 ? cmb.defMonster : state.players[cDef];
 
             // วาดฝั่งรุก (ซ้าย)
@@ -414,7 +416,7 @@ function updateCombatUI() {
                 }
             }
 
-            // จัดการปุ่มของผู้เล่น (แก้ไขให้เล่นจอเดียวกันได้ทุกคน)
+            // จัดการปุ่มของผู้เล่น
             let btnZone = document.getElementById('battle-buttons');
             let promptText = document.getElementById('action-prompt');
             
@@ -446,7 +448,6 @@ function updateCombatUI() {
                 setTimeout(resolveCombat, 1500);
             }
         }
-
         function submitCombatAction(choice, role) {
             let cmb = state.combat;
             if (role === 'atk') {
