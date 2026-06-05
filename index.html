@@ -157,8 +157,7 @@
         </div>
     </div>
 
-    <script>
-        const boardData = [
+    const boardData = [
             { id: 0, name: "🏰 ปราสาทเริ่มต้น", type: "start", r: 1, c: 1 },
             { id: 1, name: "👹 ทุ่งสไลม์", type: "monster", r: 1, c: 2 },
             { id: 2, name: "🎁 หีบสมบัติโบราณ", type: "chest", r: 1, c: 3 },
@@ -179,15 +178,13 @@
 
         // ------------------ ใส่คีย์ FirebaseConfig ของคุณตรงนี้ ------------------
         const firebaseConfig = {
-
-  apiKey: "AIzaSyDa7oTT6s-HkAFB45F9yeUtMBZzl8CwcUA",
-  authDomain: "testdeawgame.firebaseapp.com",
-  databaseURL: "https://testdeawgame-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "testdeawgame",
-  storageBucket: "testdeawgame.firebasestorage.app",
-  messagingSenderId: "624768401121",
-  appId: "1:624768401121:web:a3827220f7bb907b2dc1a0",
-  measurementId: "G-8N2BK71CM0"
+            apiKey: "AIzaSy...",
+            authDomain: "your-app.firebaseapp.com",
+            databaseURL: "https://your-app.firebaseio.com",
+            projectId: "your-app",
+            storageBucket: "your-app.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:1234:web:abcd"
         };
         // --------------------------------------------------------------------
 
@@ -217,8 +214,8 @@
                         gameActive: true,
                         logs: ["🌟 เปิดห้องออนไลน์สำเร็จ! ยินดีต้อนรับเข้าสู่ Dokapon"],
                         players: [
-                            { id: 0, name: "ผู้เล่น 1 (P1)", lv: 1, exp: 0, hp: 100, maxHp: 100, atk: 15, position: 0, isStunned: false, items: ["ไม่มีไอเทม"] },
-                            { id: 1, name: "ผู้เล่น 2 (P2)", lv: 1, exp: 0, hp: 100, maxHp: 100, atk: 15, position: 0, isStunned: false, items: ["ไม่มีไอเทม"] }
+                            { id: 0, name: "ผู้เล่น 1 (P1)", lv: 1, hp: 100, maxHp: 100, atk: 15, position: 0, isStunned: false, items: ["ไม่มีไอเทม"] },
+                            { id: 1, name: "ผู้เล่น 2 (P2)", lv: 1, hp: 100, maxHp: 100, atk: 15, position: 0, isStunned: false, items: ["ไม่มีไอเทม"] }
                         ],
                         combat: { active: false }
                     });
@@ -239,7 +236,7 @@
             boardEl.innerHTML = '';
             const centerSpace = document.createElement('div');
             centerSpace.className = 'center-space';
-            centerSpace.innerHTML = `<h3 style="color:#ffeb3b; margin:0;">ONLINE</h3><p style="font-size:10px; color:#aaa;">เลเวลมอนสเตอร์จะสเกลตามตัวคุณ!</p>`;
+            centerSpace.innerHTML = `<h3 style="color:#ffeb3b; margin:0;">ONLINE</h3><p style="font-size:10px; color:#aaa;">ชนะเกมเมื่อถึง LV 50!</p>`;
             boardEl.appendChild(centerSpace);
 
             boardData.forEach(cell => {
@@ -300,11 +297,17 @@
             roomRef.child('logs').set(gameState.logs);
         }
 
+        function nextTurn() {
+            if (!gameState.gameActive) return;
+            let nextPlayerIdx = gameState.turn === 0 ? 1 : 0;
+            roomRef.child('turn').set(nextPlayerIdx);
+        }
+
         function rollDiceOnline() {
             let currentPlayer = gameState.players[myPlayerId];
             
             if (currentPlayer.isStunned) {
-                pushLog(`🥴 <b>${currentPlayer.name}</b> อาการดีขึ้นแล้ว ข้ามเทิร์นนี้เพื่อฟื้นฟูเลือดจนเต็ม!`);
+                pushLog(`🥴 <b>${currentPlayer.name}</b> อาการดีขึ้น ข้ามเทิร์นนี้เพื่อฟื้นฟูเลือดจนเต็ม!`);
                 currentPlayer.isStunned = false;
                 currentPlayer.hp = currentPlayer.maxHp;
                 roomRef.child('players/' + myPlayerId).set(currentPlayer);
@@ -318,13 +321,13 @@
             currentPlayer.position = newPos;
 
             let currentCell = boardData[newPos];
-            pushLog(`🎲 <b>${currentPlayer.name}</b> ทอยได้ [<b>${dice}</b>] เดินไปที่ช่อง <b>"${currentCell.name}"</b>`);
+            pushLog(`🎲 <b>${currentPlayer.name}</b> ทอยได้ [<b>${dice}</b>] เดินไปที่ <b>"${currentCell.name}"</b>`);
 
             let opponentId = myPlayerId === 0 ? 1 : 0;
             let opponent = gameState.players[opponentId];
 
             if (currentPlayer.position === opponent.position && newPos !== 0) {
-                pushLog(`⚔️💥 <b>เวทีเดือด! ${currentPlayer.name} ตกช่องเดียวกับ ${opponent.name} เปิดฉาก PVP!</b>`);
+                pushLog(`⚔️💥 <b>เวทีเดือด! ${currentPlayer.name} ปะทะกับ ${opponent.name} เปิดฉาก PVP จนกว่าจะตาย!</b>`);
                 setupCombatData(myPlayerId, opponentId, 'player', opponent.name, opponent.lv, opponent.hp, opponent.maxHp, opponent.atk);
             } else {
                 handleCellEventOnline(currentPlayer, currentCell);
@@ -374,20 +377,22 @@
             }
         }
 
+        // ==================== ระบบต่อสู้จนกว่าจะตาย ====================
         function setupCombatData(atkId, defId, type, name, lv, hp, maxHp, atk) {
             roomRef.child('combat').set({
                 active: true,
                 type: type,
-                attackerIdx: atkId,
-                defenderIdx: defId, 
+                initiatorIdx: atkId,
+                currentAttacker: atkId,
+                currentDefender: defId, 
                 attackerChoice: "",
                 defenderChoice: "",
-                log: "เริ่มการปะทะวัดใจ! กรุณาเลือกคำสั่งรุกและรับของคุณ",
+                resolving: null,
+                log: "เริ่มการปะทะเดือด! กรุณาเลือกคำสั่งรุกและรับของคุณ",
                 defMonster: { name: name, lv: lv, hp: hp, maxHp: maxHp, atk: atk }
             });
         }
 
-        // ==================== ฟังก์ชันควบคุมฉากต่อสู้แบบล็อกฝั่งถาวร ====================
         function handleCombatUI() {
             const cmb = gameState.combat;
             const overlay = document.getElementById('battle-overlay');
@@ -395,42 +400,35 @@
 
             overlay.style.display = 'flex';
             
-            // ดึงข้อมูลตามไอดีผู้เล่นจริง (ไม่สนว่าใครบุกใครรับ)
             let p1Data = gameState.players[0]; 
-            let p2Data = cmb.defenderIdx !== -1 ? gameState.players[1] : cmb.defMonster;
+            let p2Data = cmb.type === 'player' ? gameState.players[1] : cmb.defMonster;
+            let cAtk = cmb.currentAttacker;
 
-            // --- 🔴 อัปเดตฝั่งซ้าย (ผู้เล่น 1 เสมอ) ---
+            // --- ฝั่งซ้าย (ผู้เล่น 1) ---
             document.getElementById('f-left-lv').innerText = p1Data.lv;
             document.getElementById('f-left-hp-text').innerText = p1Data.hp;
             document.getElementById('f-left-maxhp').innerText = p1Data.maxHp;
             document.getElementById('f-left-hp-bar').style.width = (p1Data.hp / p1Data.maxHp * 100) + '%';
             
-            // ป้ายบอกสถานะฝั่งซ้าย (P1 เป็นคนรุก หรือ คนรับ?)
             let leftRoleTag = document.getElementById('f-left-role');
-            if (cmb.attackerIdx === 0) {
-                leftRoleTag.innerText = "⚔️ ฝ่ายรุก (โจมตี)";
-                leftRoleTag.className = "fighter-role-tag role-attacker";
+            if (cAtk === 0) {
+                leftRoleTag.innerText = "⚔️ ฝ่ายรุก (โจมตี)"; leftRoleTag.className = "fighter-role-tag role-attacker";
             } else {
-                leftRoleTag.innerText = "🛡️ ฝ่ายรับ (ป้องกัน)";
-                leftRoleTag.className = "fighter-role-tag role-defender";
+                leftRoleTag.innerText = "🛡️ ฝ่ายรับ (ป้องกัน)"; leftRoleTag.className = "fighter-role-tag role-defender";
             }
 
-            // --- 🔵 อัปเดตฝั่งขวา (ผู้เล่น 2 หรือ มอนสเตอร์ เสมอ) ---
-            document.getElementById('f-right-name').innerText = cmb.defenderIdx !== -1 ? "🔵 ผู้เล่น 2 (P2)" : p2Data.name;
+            // --- ฝั่งขวา (ผู้เล่น 2 หรือ มอนสเตอร์) ---
+            document.getElementById('f-right-name').innerText = cmb.type === 'player' ? "🔵 ผู้เล่น 2 (P2)" : p2Data.name;
             document.getElementById('f-right-lv').innerText = p2Data.lv;
             document.getElementById('f-right-hp-text').innerText = p2Data.hp;
             document.getElementById('f-right-maxhp').innerText = p2Data.maxHp;
             document.getElementById('f-right-hp-bar').style.width = (p2Data.hp / p2Data.maxHp * 100) + '%';
 
-            // ป้ายบอกสถานะฝั่งขวา (P2/มอนสเตอร์ เป็นคนรุก หรือ คนรับ?)
             let rightRoleTag = document.getElementById('f-right-role');
-            if (cmb.attackerIdx === 1 || cmb.attackerIdx === -1 || (cmb.defenderIdx === -1 && cmb.attackerIdx !== 0)) {
-                // กรณีมอนสเตอร์บุก หรือ P2 บุก
-                rightRoleTag.innerText = "⚔️ ฝ่ายรุก (โจมตี)";
-                rightRoleTag.className = "fighter-role-tag role-attacker";
+            if (cAtk === 1 || cAtk === -1) {
+                rightRoleTag.innerText = "⚔️ ฝ่ายรุก (โจมตี)"; rightRoleTag.className = "fighter-role-tag role-attacker";
             } else {
-                rightRoleTag.innerText = "🛡️ ฝ่ายรับ (ป้องกัน)";
-                rightRoleTag.className = "fighter-role-tag role-defender";
+                rightRoleTag.innerText = "🛡️ ฝ่ายรับ (ป้องกัน)"; rightRoleTag.className = "fighter-role-tag role-defender";
             }
 
             document.getElementById('battle-log-text').innerHTML = cmb.log;
@@ -440,8 +438,8 @@
             const btnZone = document.getElementById('battle-buttons');
             btnZone.innerHTML = '';
 
-            let amIAttacker = (myPlayerId === cmb.attackerIdx);
-            let amIDefender = (cmb.defenderIdx !== -1 && myPlayerId === cmb.defenderIdx);
+            let amIAttacker = (myPlayerId === cmb.currentAttacker);
+            let amIDefender = (myPlayerId === cmb.currentDefender);
 
             if (amIAttacker && !cmb.attackerChoice) {
                 promptText.innerText = "👉 ตาคุณบุก! เลือกคำสั่งโจมตีของคุณ:";
@@ -460,132 +458,164 @@
                 `;
             } 
             else {
-                if (cmb.defenderIdx === -1 && cmb.attackerChoice && !cmb.defenderChoice && myPlayerId === cmb.attackerIdx) {
-                    const aiDefs = ['🛡️ กันธรรมดา', '🛡️ กันหนัก', '🔮 กันเวท'];
-                    let randomDef = aiDefs[Math.floor(Math.random() * aiDefs.length)];
-                    roomRef.child('combat/defenderChoice').set(randomDef);
-                    return;
-                }
-                promptText.innerText = "⏳ รออีกฝ่ายเลือกแผนคำสั่ง หรือระบบกำลังคำนวณผล...";
+                promptText.innerText = "⏳ รออีกฝ่ายตัดสินใจ หรือกำลังคำนวณผล...";
             }
 
-            if (cmb.attackerChoice && cmb.defenderChoice && myPlayerId === cmb.attackerIdx) {
-                setTimeout(resolveOnlineCombatTurn, 1500);
+            // หากทั้ง 2 ฝ่ายเลือกคำสั่งแล้ว ให้ฝั่งที่เปิดเผยหน้าจอคำนวณ 1 คน (ป้องกันบั๊กประมวลผล 2 รอบ)
+            if (cmb.attackerChoice && cmb.defenderChoice && !cmb.resolving) {
+                if (myPlayerId === cmb.initiatorIdx || (cmb.type === 'player' && myPlayerId === 0)) {
+                    roomRef.child('combat/resolving').set(true);
+                    setTimeout(resolveOnlineCombatTurn, 1500);
+                }
             }
         }
 
         function submitCombatAction(choice) {
             const cmb = gameState.combat;
-            if (myPlayerId === cmb.attackerIdx) {
-                roomRef.child('combat/attackerChoice').set(choice);
-            } else if (myPlayerId === cmb.defenderIdx) {
-                roomRef.child('combat/defenderChoice').set(choice);
+            let updates = {};
+            
+            if (myPlayerId === cmb.currentAttacker) {
+                updates['combat/attackerChoice'] = choice;
+                // ถ้าสู้กับมอนสเตอร์ ให้มอนสเตอร์สุ่มป้องกันอัตโนมัติ
+                if (cmb.currentDefender === -1) {
+                    const aiDefs = ['🛡️ กันธรรมดา', '🛡️ กันหนัก', '🔮 กันเวท'];
+                    updates['combat/defenderChoice'] = aiDefs[Math.floor(Math.random() * aiDefs.length)];
+                }
+            } else if (myPlayerId === cmb.currentDefender) {
+                updates['combat/defenderChoice'] = choice;
+                // ถ้ามอนสเตอร์โจมตีอยู่ ให้สุ่มโจมตีอัตโนมัติ
+                if (cmb.currentAttacker === -1) {
+                    const aiAtks = ['🔥 ตีธรรมดา', '💥 ตีหนัก', '🔮 ตีเวท'];
+                    updates['combat/attackerChoice'] = aiAtks[Math.floor(Math.random() * aiAtks.length)];
+                }
             }
+            roomRef.update(updates);
         }
 
         function resolveOnlineCombatTurn() {
             let cmb = gameState.combat;
+            if (!cmb || !cmb.active) return;
+
+            let cAtk = cmb.currentAttacker;
+            let cDef = cmb.currentDefender;
+
             let atk = cmb.attackerChoice;
             let def = cmb.defenderChoice;
-            let pAtk = gameState.players[cmb.attackerIdx];
-            let pDef = cmb.defenderIdx !== -1 ? gameState.players[cmb.defenderIdx] : cmb.defMonster;
+
+            let pAtk = (cAtk === -1) ? cmb.defMonster : gameState.players[cAtk];
+            let pDef = (cDef === -1) ? cmb.defMonster : gameState.players[cDef];
 
             let dmgToDef = 0; let dmgToAtk = 0;
-            let logMsg = `⚔️ ผลการดวล: <b>${pAtk.name}</b> ใช้ [${atk}] 💥 <b>${pDef.name}</b> ใช้ [${def}]<br>`;
+            let logMsg = `⚔️ ผลการปะทะ: <b>${pAtk.name}</b> [${atk}] VS <b>${pDef.name}</b> [${def}]<br>`;
             let baseDmg = pAtk.atk;
 
             if (atk === '🔥 ตีธรรมดา') {
-                if (def === '🛡️ กันธรรมดา') { dmgToDef = Math.floor(baseDmg * 0.4); logMsg += `🛡️ บล็อกสำเร็จ! กันธรรมดาลดพลังตีธรรมดาได้เยอะ`; } 
-                else if (def === '🛡️ กันหนัก') { dmgToDef = Math.floor(baseDmg * 1.3); logMsg += `❌ ป้องกันหนักหลงทาง เจอความไวสปีดตีธรรมดาสวนหน้าสั่น!`; } 
-                else if (def === '🔮 กันเวท') { dmgToDef = baseDmg; logMsg += `💥 โล่เวทมนตร์เปล่าประโยชน์ต่อแรงกายภาพ!`; }
+                if (def === '🛡️ กันธรรมดา') { dmgToDef = Math.floor(baseDmg * 0.4); logMsg += `🛡️ บล็อกสำเร็จ! กันธรรมดาลดดาเมจได้เยอะ`; } 
+                else if (def === '🛡️ กันหนัก') { dmgToDef = Math.floor(baseDmg * 1.3); logMsg += `❌ ป้องกันหนักหลงทาง โดนสวนสปีดหน้าสั่น!`; } 
+                else if (def === '🔮 กันเวท') { dmgToDef = baseDmg; logMsg += `💥 โล่เวทมนตร์กันกายภาพไม่ได้!`; }
             } 
             else if (atk === '💥 ตีหนัก') {
-                if (def === '🛡️ กันหนัก') { dmgToAtk = Math.floor(pDef.atk * 1.6); logMsg += `⚡ คานเตอร์!! ป้องกันหนักสะท้อนแรงทุบคริติคอลย้อนใส่ฝั่งรุกหน้าหงาย!`; } 
-                else if (def === '🛡️ กันธรรมดา' || def === '🔮 กันเวท') { dmgToDef = Math.floor(baseDmg * 2.3); logMsg += `💥💥 โล่แตกกระจุย!! ดาเมจทุบหนักทะลวงแนวป้องกันยับเยิน!`; }
+                if (def === '🛡️ กันหนัก') { dmgToAtk = Math.floor(pDef.atk * 1.6); logMsg += `⚡ คานเตอร์!! สะท้อนแรงทุบคริติคอลย้อนใส่คนตี!`; } 
+                else if (def === '🛡️ กันธรรมดา' || def === '🔮 กันเวท') { dmgToDef = Math.floor(baseDmg * 2.3); logMsg += `💥💥 โล่แตกกระจุย!! ดาเมจทุบหนักทะลวงยับ!`; }
             } 
             else if (atk === '🔮 ตีเวท') {
-                if (def === '🔮 กันเวท') { dmgToAtk = Math.floor(pDef.atk * 0.6); logMsg += `🔮 กระจกมนตรา! กันเวทสะท้อนคลื่นพลังเวทระเบิดกลับใส่คนร่าย!`; } 
-                else if (def === '🛡️ กันธรรมดา' || def === '🛡️ กันหนัก') { dmgToDef = Math.floor(baseDmg * 1.9); logMsg += `🌋 มหาเวทโจมตีสายฟ้าทะลุโล่กายภาพอย่างไร้ความหมาย!`; }
+                if (def === '🔮 กันเวท') { dmgToAtk = Math.floor(pDef.atk * 0.6); logMsg += `🔮 กระจกมนตรา! สะท้อนเวทระเบิดกลับใส่คนร่าย!`; } 
+                else if (def === '🛡️ กันธรรมดา' || def === '🛡️ กันหนัก') { dmgToDef = Math.floor(baseDmg * 1.9); logMsg += `🌋 มหาเวทโจมตีทะลุโล่กายภาพ!`; }
             }
 
             if(dmgToDef > 0) pDef.hp = Math.max(0, pDef.hp - dmgToDef);
             if(dmgToAtk > 0) pAtk.hp = Math.max(0, pAtk.hp - dmgToAtk);
 
-            roomRef.child('players/' + cmb.attackerIdx).set(pAtk);
-            if (cmb.defenderIdx !== -1) {
-                roomRef.child('players/' + cmb.defenderIdx).set(pDef);
-            } else {
-                roomRef.child('combat/defMonster').set(pDef);
-            }
+            // บันทึกเลือดปัจจุบัน
+            if (cAtk === -1) roomRef.child('combat/defMonster').set(pAtk);
+            else roomRef.child('players/' + cAtk).set(pAtk);
 
-            if (pDef.hp <= 0) {
-                logMsg += `<br>🏁 <b>${pAtk.name} ได้รับชัยชนะเด็ดขาดในรอบนี้!</b>`;
+            if (cDef === -1) roomRef.child('combat/defMonster').set(pDef);
+            else roomRef.child('players/' + cDef).set(pDef);
+
+            // ตรวจสอบว่ามีคนตายไหม
+            if (pDef.hp <= 0 || pAtk.hp <= 0) {
+                let winnerIdx = pDef.hp <= 0 ? cAtk : cDef;
+                let loserIdx = pDef.hp <= 0 ? cDef : cAtk;
+                let winnerName = winnerIdx === -1 ? cmb.defMonster.name : gameState.players[winnerIdx].name;
+                
+                logMsg += `<br>🏁 <b>${winnerName} ปลิดชีพศัตรูสำเร็จ! จบการต่อสู้!</b>`;
                 roomRef.child('combat/log').set(logMsg);
-                setTimeout(() => endOnlineCombat(cmb.attackerIdx, cmb.defenderIdx, true), 2000);
-            } else if (pAtk.hp <= 0) {
-                logMsg += `<br>🏁 <b>${pDef.name} พลิกกลับมาชนะศัตรูได้สำเร็จ!</b>`;
-                roomRef.child('combat/log').set(logMsg);
-                setTimeout(() => endOnlineCombat(cmb.attackerIdx, cmb.defenderIdx, false), 2000);
+
+                // ส่งไปฟังก์ชันจบการต่อสู้ (เรียกแค่ฝั่งที่ประมวลผลคนเดียว)
+                if (myPlayerId === cmb.initiatorIdx || (cmb.type === 'player' && myPlayerId === 0)) {
+                    setTimeout(() => endOnlineCombat(winnerIdx, loserIdx), 2500);
+                }
             } else {
-                // สลับบทบาทในเทิร์นย่อยถัดไป (แต่หน้าจอยังล็อกฝั่งเดิมอยู่)
+                // ถ้ายังไม่มีใครตาย ให้สลับฝั่งรุก-รับ ลูปต่อไปเรื่อยๆ
                 roomRef.child('combat').update({
-                    attackerIdx: cmb.defenderIdx !== -1 ? cmb.defenderIdx : cmb.attackerIdx, 
-                    defenderIdx: cmb.defenderIdx !== -1 ? cmb.attackerIdx : -1,
+                    currentAttacker: cDef,
+                    currentDefender: cAtk,
                     attackerChoice: "",
                     defenderChoice: "",
-                    log: logMsg + `<br>🔄 สลับบทบาทรุก-รับในรอบถัดไป!`
+                    resolving: null,
+                    log: logMsg + `<br>🔄 ยังไม่มีใครล้ม! สลับฝั่งรุก-รับในรอบถัดไป`
                 });
             }
         }
 
-        function endOnlineCombat(atkIdx, defIdx, isAttackerWin) {
-            let pAtk = gameState.players[atkIdx];
-            
-            if (defIdx === -1) {
-                if (isAttackerWin) {
-                    let expReward = gameState.combat.type === 'worldboss' ? 250 : gameState.combat.defMonster.lv * 40;
-                    pAtk.exp += expReward;
-                    pushLog(`🏆 <b>${pAtk.name}</b> ปราบมอนสเตอร์สำเร็จ! ได้รับ <b>+${expReward} EXP</b>`);
+        function endOnlineCombat(winnerIdx, loserIdx) {
+            let logMsg = "";
+            let defMonster = gameState.combat.defMonster;
+
+            if (winnerIdx === 0 || winnerIdx === 1) {
+                let winnerObj = gameState.players[winnerIdx];
+                
+                if (loserIdx === -1) {
+                    // ⚔️ กรณีผู้เล่น ชนะ มอนสเตอร์
+                    let gainedLv = defMonster.lv; // อัปเลเวลเพิ่มเท่ากับเลเวลมอนสเตอร์
+                    winnerObj.lv += gainedLv;
+                    winnerObj.atk += gainedLv * 6;
+                    winnerObj.maxHp += gainedLv * 15;
+                    winnerObj.hp = winnerObj.maxHp; // ฟื้นฟูเลือดให้เต็ม
+                    logMsg += `🏆 <b>${winnerObj.name}</b> ปราบมอนสเตอร์สำเร็จ! เลเวลเพิ่มขึ้น ${gainedLv} (ปัจจุบัน LV.${winnerObj.lv})`;
+                } else {
+                    // ⚔️ กรณีผู้เล่น ชนะ ผู้เล่น (PVP)
+                    let loserObj = gameState.players[loserIdx];
+                    loserObj.hp = 10;
+                    loserObj.isStunned = true;
+                    loserObj.position = 0; // ส่งกลับฐาน
                     
-                    while (pAtk.exp >= 100) {
-                        pAtk.exp -= 100; pAtk.lv += 1; pAtk.atk += 6; pAtk.maxHp += 15;
-                        pushLog(`🆙 <b>${pAtk.name} เลเวลอัปเป็น LV.${pAtk.lv}!</b>`);
-                    }
-                    roomRef.child('players/' + atkIdx).set(pAtk);
-                } else {
-                    pAtk.isStunned = true;
-                    pushLog(`💀 <b>${pAtk.name}</b> พ่ายแพ้ให้มอนสเตอร์! ติดสถานะบาดเจ็บสาหัส (ข้ามเทิร์นถัดไป 1 ตา)`);
-                    roomRef.child('players/' + atkIdx).set(pAtk);
+                    let gainedLv = loserObj.lv; // PVP ชนะได้เลเวลผู้แพ้มาครอง!
+                    winnerObj.lv += gainedLv;
+                    winnerObj.atk += gainedLv * 6;
+                    winnerObj.maxHp += gainedLv * 15;
+                    winnerObj.hp = winnerObj.maxHp;
+
+                    logMsg += `🏆 <b>${winnerObj.name}</b> ชนะเดือด PVP! แย่งชิงพลังมาเพิ่มได้ ${gainedLv} ระดับ (LV.${winnerObj.lv}) พร้อมส่งศัตรูกลับบ้าน`;
+                    roomRef.child('players/' + loserIdx).set(loserObj);
                 }
+                roomRef.child('players/' + winnerIdx).set(winnerObj);
             } else {
-                let pDef = gameState.players[defIdx];
-                if (isAttackerWin) {
-                    pDef.isStunned = true;
-                    pushLog(`👑 <b>${pAtk.name}</b> ชนะศึกล้มเพื่อนได้! ยัดสถานะสตั้นให้ <b>${pDef.name}</b> หยุดเดินตาถัดไป`);
-                } else {
-                    pAtk.isStunned = true;
-                    pushLog(`👑 <b>${pDef.name}</b> ชนะศึกป้องกันตัวสวนเพื่อนดับ! ยัดสถานะสตั้นให้ <b>${pAtk.name}</b> หยุดเดินตาถัดไป`);
-                }
-                roomRef.child('players/' + atkIdx).set(gameState.players[atkIdx]);
-                roomRef.child('players/' + defIdx).set(gameState.players[defIdx]);
+                // 💀 กรณีมอนสเตอร์ ชนะ ผู้เล่น
+                let loserObj = gameState.players[loserIdx];
+                loserObj.hp = 10;
+                loserObj.isStunned = true;
+                loserObj.position = 0;
+                logMsg += `💀 <b>${loserObj.name}</b> พ่ายแพ้ต่อพลังมอนสเตอร์! บาดเจ็บสาหัสถูกส่งกลับปราสาท!`;
+                roomRef.child('players/' + loserIdx).set(loserObj);
             }
 
-            if (gameState.players[0].lv >= 30) {
-                pushLog(`🎉 <b>ผู้เล่น 1 (P1) แตะเลเวล 30 ชนะเกม Dokapon คอร์สออนไลน์นี้แล้ว!</b> 🎉`);
-                roomRef.child('gameActive').set(false);
-            } else if (gameState.players[1].lv >= 30) {
-                pushLog(`🎉 <b>ผู้เล่น 2 (P2) แตะเลเวล 30 ชนะเกม Dokapon คอร์สออนไลน์นี้แล้ว!</b> 🎉`);
-                roomRef.child('gameActive').set(false);
-            }
-
-            roomRef.child('combat/active').set(false);
+            pushLog(logMsg);
+            checkVictoryCondition();
+            roomRef.child('combat').set({ active: false });
             nextTurn();
         }
 
-        function nextTurn() {
-            let nxt = (gameState.turn + 1) % 2;
-            roomRef.child('turn').set(nxt);
+        function checkVictoryCondition() {
+            for (let i = 0; i < 2; i++) {
+                if (gameState.players[i].lv >= 50) {
+                    roomRef.child('gameActive').set(false);
+                    pushLog(`🎉👑🏆 <b>ประกาศชัยชนะ! ${gameState.players[i].name} ทะลวงถึง LV 50 สำเร็จ! เป็นผู้ชนะของกระดานนี้!</b> 🏆👑🎉`);
+                    alert(`🎉 ยินดีด้วยกับ P${i+1} เป็นผู้ชนะในแมทช์นี้! เลเวลถึง 50 แล้ว`);
+                    break;
+                }
+            }
         }
-    </script>
 </body>
 </html>
