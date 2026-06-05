@@ -355,7 +355,7 @@
             syncState();
         }
 
-        function updateCombatUI() {
+function updateCombatUI() {
             const cmb = state.combat;
             const overlay = document.getElementById('battle-overlay');
             if (!cmb.active) { overlay.style.display = 'none'; return; }
@@ -386,7 +386,7 @@
 
             document.getElementById('battle-log-text').innerHTML = cmb.log;
 
-            // 🤖 ระบบ AI ออโต้ (แก้ไขบั๊กค้างแล้ว)
+            // 🤖 ระบบ AI ออโต้
             if (!cmb.resolving) {
                 let atkIsBot = (cAtk === -1 || state.players[cAtk].isBot);
                 let defIsBot = (cDef === -1 || state.players[cDef].isBot);
@@ -414,24 +414,27 @@
                 }
             }
 
-            // จัดการปุ่มของผู้เล่น
+            // จัดการปุ่มของผู้เล่น (แก้ไขให้เล่นจอเดียวกันได้ทุกคน)
             let btnZone = document.getElementById('battle-buttons');
             let promptText = document.getElementById('action-prompt');
-            let myPlayer = state.players[myId];
-            let hasMag = hasMagic(myPlayer);
+            
+            let isAtkHuman = cAtk !== -1 && !state.players[cAtk].isBot;
+            let isDefHuman = cDef !== -1 && !state.players[cDef].isBot;
 
-            if (myId === cAtk && !cmb.attackerChoice) {
-                promptText.innerText = "👉 คุณเป็นฝ่ายรุก! เลือกแผนโจมตี:";
+            if (isAtkHuman && !cmb.attackerChoice) {
+                let hasMag = hasMagic(state.players[cAtk]);
+                promptText.innerText = `👉 ตาของ ${state.players[cAtk].name} (ฝ่ายรุก)! เลือกแผนโจมตี:`;
                 btnZone.innerHTML = `
-                    <button class="btn-action btn-atk-normal" onclick="submitCombatAction('🔥 ตีธรรมดา')">🔥 ตีธรรมดา</button>
-                    <button class="btn-action btn-atk-heavy" onclick="submitCombatAction('💥 ตีหนัก')">💥 ตีหนัก</button>
-                    <button class="btn-action btn-atk-magic" ${!hasMag?'disabled':''} onclick="submitCombatAction('🔮 ตีเวท')">🔮 ตีเวท ${!hasMag?'(ล็อก)':''}</button>`;
-            } else if (myId === cDef && !cmb.defenderChoice) {
-                promptText.innerText = "🔒 คุณเป็นฝ่ายรับ! ดักแผนป้องกัน:";
+                    <button class="btn-action btn-atk-normal" onclick="submitCombatAction('🔥 ตีธรรมดา', 'atk')">🔥 ตีธรรมดา</button>
+                    <button class="btn-action btn-atk-heavy" onclick="submitCombatAction('💥 ตีหนัก', 'atk')">💥 ตีหนัก</button>
+                    <button class="btn-action btn-atk-magic" ${!hasMag?'disabled':''} onclick="submitCombatAction('🔮 ตีเวท', 'atk')">🔮 ตีเวท ${!hasMag?'(ล็อก)':''}</button>`;
+            } else if (isDefHuman && !cmb.defenderChoice) {
+                let hasMag = hasMagic(state.players[cDef]);
+                promptText.innerText = `🔒 ตาของ ${state.players[cDef].name} (ฝ่ายรับ)! ดักแผนป้องกัน:`;
                 btnZone.innerHTML = `
-                    <button class="btn-action btn-def-normal" onclick="submitCombatAction('🛡️ กันธรรมดา')">🛡️ กันธรรมดา</button>
-                    <button class="btn-action btn-def-heavy" onclick="submitCombatAction('🛡️ กันหนัก')">🛡️ กันหนัก</button>
-                    <button class="btn-action btn-def-magic" ${!hasMag?'disabled':''} onclick="submitCombatAction('🔮 กันเวท')">🔮 กันเวท ${!hasMag?'(ล็อก)':''}</button>`;
+                    <button class="btn-action btn-def-normal" onclick="submitCombatAction('🛡️ กันธรรมดา', 'def')">🛡️ กันธรรมดา</button>
+                    <button class="btn-action btn-def-heavy" onclick="submitCombatAction('🛡️ กันหนัก', 'def')">🛡️ กันหนัก</button>
+                    <button class="btn-action btn-def-magic" ${!hasMag?'disabled':''} onclick="submitCombatAction('🔮 กันเวท', 'def')">🔮 กันเวท ${!hasMag?'(ล็อก)':''}</button>`;
             } else {
                 promptText.innerText = "⏳ รออีกฝ่ายตัดสินใจ หรือกำลังคำนวณผล...";
                 btnZone.innerHTML = "";
@@ -444,10 +447,13 @@
             }
         }
 
-        function submitCombatAction(choice) {
+        function submitCombatAction(choice, role) {
             let cmb = state.combat;
-            if (myId === cmb.currentAttacker) cmb.attackerChoice = choice;
-            else if (myId === cmb.currentDefender) cmb.defenderChoice = choice;
+            if (role === 'atk') {
+                cmb.attackerChoice = choice;
+            } else if (role === 'def') {
+                cmb.defenderChoice = choice;
+            }
             syncState();
         }
 
